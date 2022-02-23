@@ -1,15 +1,12 @@
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import io from "socket.io-client";
 import Message from "../components/message.js";
 
 const Room = () => {
-  const [connection, setConnection] = useState({
-    emit: () => undefined,
-  });
   const [actualMessage, setActualMessage] = useState("");
   const [previousMessages, setPreviousMessages] = useState([]);
-  const [actualSocket, setActualSocket] = useState();
+  const [socket, setSocket] = useState();
   const router = useRouter();
   const { room } = router.query;
 
@@ -24,7 +21,7 @@ const Room = () => {
     event.stopPropagation();
     console.log("sending message", actualMessage);
 
-    actualSocket.emit("message", {
+    socket.emit("message", {
       room,
       data: actualMessage,
       username: "User 1",
@@ -33,44 +30,40 @@ const Room = () => {
     setActualMessage("");
   };
 
+  //connect socket
   useEffect(() => {
     if (!room) return;
-    console.log("use effect", room);
-    fetch("/api/socket").finally(() => {
-      const socket = io();
-      setActualSocket(socket);
-
-      socket.on("connect", () => {
-        socket.emit("join", room);
-      });
-
-      socket.on("joined", (room) => {
-        console.log("I just joined the room ", room);
-        // setConnection(() => socket)
-        // setTimeout(() => {
-        //   sendMesage('ta mère')
-        // }, 1000)
-      });
-
-      socket.on("disconnect", () => {
-        console.log("disconnect");
-      });
-
-      socket.on("message", ({ data, username }) => {
-        console.log("Message recevied from ", username, data);
-        setPreviousMessages(() => previousMessages.push({ username, data }));
-      });
-    });
+    setSocket(io());
   }, [room]);
 
-  console.log(previousMessages);
+  const updateMessages = ({ data, username }) => {
+    const message = { data, username };
+    setPreviousMessages((prev) => [...prev, message]);
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("connect", () => {
+      socket.emit("join", room);
+    });
+
+    socket.on("joined", (room) => {
+      console.log("I just joined the room ", room);
+    });
+  }, [socket, room]);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("message", updateMessages);
+  }, [socket]);
 
   return (
     <div className="w-screen h-screen">
       <p>Room: {room}</p>
-      {previousMessages.map((message, index) => (
-        <p key={index}>{message}</p>
-      ))}
+      {previousMessages &&
+        previousMessages.map((message, index) => (
+          <p key={index}>{message.data}</p>
+        ))}
 
       <div className="flex fixed bottom-0 left-0 m-5">
         <input
