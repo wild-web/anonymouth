@@ -1,23 +1,22 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import useState from 'react'
-import styles from '../styles/Home.module.css'
+import Head from "next/head";
+import Image from "next/image";
+import { useState } from "react";
+import styles from "../styles/Home.module.css";
+import { useRouter } from "next/router";
 
 export default function Home() {
-  const [room, setRoom] = useState("")
+  const router = useRouter();
+  const [room, setRoom] = useState("");
 
-  const handleChange = (e) =>{
-    setRoom(e.target.value)
-  }
+  const handleChange = (e) => {
+    setRoom(e.target.value);
+  };
 
-  const goToRoom = (event)=>{
+  const goToRoom = (event) => {
     event.preventDefault();
-		event.stopPropagation();
-		router.push(`/${room}`);  
-  }
-
-
-
+    event.stopPropagation();
+    router.push(`/${room}`);
+  };
 
   return (
     <div className="w-screen h-screen">
@@ -29,13 +28,16 @@ export default function Home() {
 
       <main className="w-full h-full">
         <h2>Enter a domain name to join chat</h2>
-        <input type="text" placeholder="Type here" className="input w-full max-w-xs" onChange={handleChange}/>
-        <button className="btn btn-active" onClick={goToRoom}>Join</button>
-
-       
+        <input
+          type="text"
+          placeholder="Type here"
+          className="input w-full max-w-xs"
+          onChange={handleChange}
+        />
+        <button className="btn btn-active" onClick={goToRoom}>
+          Join
+        </button>
       </main>
-
-     
     </div>
-  )
+  );
 }
